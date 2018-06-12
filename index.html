@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>SQL语句监控程序</title>
+	<link rel="stylesheet" href="static/css/index.css">
+</head>
+<body>
+<div class="code_bg">
+	<form class="clearFloat" id="form">
+		<div class="item left clearFloat">
+			<label for="master">主机</label>
+			<input type="text" id="master" value="127.0.0.1" name="master">
+		</div>
+		<div class="item left clearFloat">
+			<label for="username">用户</label>
+			<input type="text" id="username" value="root" name="username">
+		</div>
+		<div class="item left clearFloat">
+			<label for="password">密码</label>
+			<input type="text" id="password" value="root" name="password">
+			<input type="hidden" id="token"  name="token">
+		</div>
+		<input type="hidden" id="time"name="time">
+		<div class="btn right clearFloat">
+			<input type="button" value="下断点" id="break">
+			<input type="button" value="打印SQL" id="update">
+		</div>
+	</form>
+
+
+	<form class="search-list clearFloat" id="search">
+		<input type="text" class="search" placeholder="search">
+	</form>
+	<div class="tables">
+		<div class="table-header">
+			<table cellspacing="0" cellpadding="0" border="0">
+				<thead>
+				<tr>
+					<td>查询时间</td>
+					<td>查询语句</td>
+				</tr>
+				</thead>
+			</table>
+		</div>
+		<div class="table-body">
+			<table cellspacing="0" cellpadding="0" border="0">
+				<tbody id="data">
+
+				</tbody>
+			</table>
+		</div>
+
+	</div>
+</div>
+</body>
+</html>
+
+
+<script typet="text/javascript" src="http://libs.baidu.com/jquery/1.9.1/jquery.min.js"></script>
+<script type="text/javascript">
+//打开自动获取token
+    window.onload=function()
+	{
+        $.post("./route.php?m=token",function(data){
+            if('111111' == data.status)
+            {
+                $('#token').val(data.token);
+            }
+            else
+            {
+                alert(data.message);
+                return false;
+            }
+        },'json');
+	}
+// 下断点 定时间
+        $("#break").click(function(){
+            var token = $('#token').val();
+			$.post("./route.php?m=breakdown&token="+token,function(data){
+				if('111111' == data.status)
+				{
+					alert("成功下断点");
+					$('#time').val(data.time);
+
+				}
+				else
+				{
+					alert(data.message);
+					return false;
+				}
+			},'json');
+    });
+    //打印定时间之后到当先所执行的SQL语句
+    $("#update").click(function(){
+            var token = $('#token').val();
+            $.post("./route.php?m=updateSql",$("#form").serialize(),function(data){
+                if('111111' == data.status  && token == data.token)
+                {
+                    var str = '';
+                    for( var i = 0; i<data.data.length;i++)
+                    {
+                        var cur  = data.data[i];
+                        str+='<tr><td>'+cur.event_time+'</td><td>'+cur.argument+'</td></tr>';
+                    }
+                    $("#data").append(str);
+
+                }
+                else
+                {
+                    alert(data.message);
+                    return false;
+                }
+            },'json');
+        }
+    );
+//搜索当前时间到定点时间之后的SQL语句
+    $(".search").bind('keyup',function(){
+        var serach = $('.search').val();
+        var token = $('#token').val();
+            $.post("./route.php?m=searchSql&search="+serach,$("#form").serialize(),function(data){
+                if('111111' == data.status  && token == data.token)
+                {
+                    $("#data").html('');
+                    var str = '';
+                    for( var i = 0; i<data.data.length;i++)
+                    {
+                        var cur  = data.data[i];
+                        str+='<tr><td>'+cur.event_time+'</td><td>'+cur.argument+'</td></tr>';
+                    }
+                    $("#data").append(str);
+
+                }
+                else
+                {
+                    alert(data.message);
+                    return false;
+                }
+            },'json');
+        }
+    );
+</script>
