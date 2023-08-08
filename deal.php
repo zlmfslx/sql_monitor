@@ -12,7 +12,7 @@ class deal
     {
         $now = date('Y-m-d H:i:s');
         $data['time'] = $now;
-        $data['status'] = 'immomo.com';
+        $data['status'] = 'p1staff';
         return json_encode($data);
     }
 
